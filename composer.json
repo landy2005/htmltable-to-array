@@ -20,10 +20,14 @@
   },
   "require": {
     "php": ">=5.6.4",
-    "ext-curl": "*"
+    "ext-curl": "*",
+    "ext-pcre": "*",
+    "ext-dom": "*",
+    "ext-xml": "*",
   },
   "suggest": {
     "ext-mbstring": "Need for correctly parse UTF-8 table values.",
+    "ext-json": "Needed to export array as json.",
     "ext-yaml": "Needed to export array as yaml."
   },
   "require-dev": {
