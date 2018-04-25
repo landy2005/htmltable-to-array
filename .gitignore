@@ -1,12 +1,12 @@
-# Erpica
-config.php
-
 # Composer
-composer.phar
+*.phar
+composer.lock
+vendor
 
 # IDE project files
 *.komodoproject
 .idea
+.vagrant
 out
 gen
 
