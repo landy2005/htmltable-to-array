@@ -23,7 +23,7 @@
     "ext-curl": "*",
     "ext-pcre": "*",
     "ext-dom": "*",
-    "ext-xml": "*",
+    "ext-xml": "*"
   },
   "suggest": {
     "ext-mbstring": "Need for correctly parse UTF-8 table values.",
