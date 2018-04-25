@@ -19,7 +19,12 @@
      ]
   },
   "require": {
-    "php": ">=5.6.4"
+    "php": ">=5.6.4",
+    "ext-curl": "*"
+  },
+  "suggest": {
+    "ext-mbstring": "Need for correctly parse UTF-8 table values.",
+    "ext-yaml": "Needed to export array as yaml."
   },
   "require-dev": {
     "phpunit/phpunit": "^5"
