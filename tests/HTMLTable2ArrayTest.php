@@ -57,6 +57,8 @@ final class HTMLTable2ArrayTest extends TestCase
         $array[] = ['multiple-tables',    'multiple-tables-headerIDs',  ['headerIDs' => FALSE]];
         // Advanced
         $array[] = ['spending-record-finished', 'spending-record-finished', $params];
+        $array[] = ['hidden-rows',              'hidden-rows',              $params];
+        $array[] = ['hidden-rows',              'hidden-rows-ignoreHidden', ['ignoreHidden' => TRUE]];
 
         return $array;
     }
