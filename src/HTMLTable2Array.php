@@ -147,30 +147,24 @@ class HTMLTable2Array {
             /* Begin table header parse */
             $theads = $table->getElementsByTagName('thead');
             if ($theads->length > 0) {
-                // thead exist, use it!
-                for ($i = $theads->length; --$i >= 0; ) {
-                    $thead = $theads->item($i);
-                    //var_dump($thead->getElementsByTagName('tr'));
 
-                    foreach ($thead->getElementsByTagName('tr') as $row => $tr) {
-                        //var_dump($row); var_dump($tr);
-                        $key = 0;
-                        foreach ($tr->childNodes as $node) {
-                            if ($node->tagName == 'td') {
-                                // Iterate key and continue
-                                $key++;
-                                continue;
-                            }
-                            elseif ($node->tagName == 'th') {
-                                $table_header[$row][$key] = $this->getElementKey($node);
-                                $key++;
-                            }
+                foreach ($theads->item(0)->getElementsByTagName('tr') as $row => $tr) {
+                    //var_dump($row); var_dump($tr);
+                    $key = 0;
+                    foreach ($tr->childNodes as $node) {
+                        if ($node->tagName == 'td') {
+                            // Iterate key and continue
+                            $key++;
+                            continue;
+                        }
+                        elseif ($node->tagName == 'th') {
+                            $table_header[$row][$key] = $this->getElementKey($node);
+                            $key++;
                         }
                     }
-
-                    //https://stackoverflow.com/a/34037291/9506633
-                    $thead->parentNode->removeChild($thead); // Remove thead for correctly set table keys
                 }
+
+                $this->removeNodes($theads); // Remove tfoot for correctly set elements
 
                 //echo $dom->saveHTML();
             } else {
@@ -192,17 +186,7 @@ class HTMLTable2Array {
 
             /* Begin table footer parse */
             $tfoots = $table->getElementsByTagName('tfoot');
-            if ($tfoots->length > 0) {
-                // tfoot exist, remove it!
-                for ($i = $tfoots->length; --$i >= 0; ) {
-                    $tfoot = $tfoots->item($i);
-
-                    //https://stackoverflow.com/a/34037291/9506633
-                    $tfoot->parentNode->removeChild($tfoot); // Remove tfoot for correctly set elements
-                }
-
-                //echo $dom->saveHTML();
-            }
+            $this->removeNodes($tfoots); // Remove tfoot for correctly set elements
             /* End table footer parse */
 
             /* Begin table body parse */
@@ -389,13 +373,24 @@ EOD;
         return $html;
     }
 
-    private function getElementKey($node) {
+    private function getElementKey(DOMElement $node) {
         if ($this->headerIDs && $node->hasAttribute('id')) {
             $key = $node->attributes->getNamedItem('id')->nodeValue;
         } else {
             $key = $node->textContent;
         }
         return trim($key);
+    }
+
+    private function removeNodes(DOMNodeList $nodes) {
+        // https://stackoverflow.com/a/34037291/9506633
+        if ($nodes->length > 0) {
+            // tfoot exist, remove it!
+            for ($i = $nodes->length; --$i >= 0; ) {
+                $node = $nodes->item($i);
+                $node->parentNode->removeChild($node);
+            }
+        }
     }
 
 	private function echo_t($text)
