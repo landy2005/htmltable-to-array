@@ -59,6 +59,7 @@ final class HTMLTable2ArrayTest extends TestCase
         $array[] = ['spending-record-finished', 'spending-record-finished', $params];
         $array[] = ['hidden-rows',              'hidden-rows',              $params];
         $array[] = ['hidden-rows',              'hidden-rows-ignoreHidden', ['ignoreHidden' => TRUE]];
+        $array[] = ['timetable-caption',        'timetable-caption',        $params];
 
         return $array;
     }
