@@ -215,7 +215,7 @@ class HTMLTable2Array {
                 $arr = [];
                 foreach ($tr->childNodes as $node) {
                     if ($node->tagName == 'th') {
-                        $table_header[$row][$i] = $this->getElementKey($node);
+                        $row = trim($node->textContent); // Use row header as Key
                         $key++;
                     }
                     else if ($node->tagName == 'td') {
@@ -242,7 +242,7 @@ class HTMLTable2Array {
                     }
                 }
 
-                $table_array[] = $arr;
+                $table_array[$row] = $arr;
 
             }
             /* End table body parse */
