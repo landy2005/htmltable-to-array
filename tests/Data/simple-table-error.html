@@ -1,0 +1,71 @@
+<html>
+<link href="bootstrap.css" rel="stylesheet" type="text/css">
+<link href="styles-wide.css" rel="stylesheet" type="text/css">
+<head>
+</head>
+<body style="padding: none;">
+
+<div class="container">
+  <div class="row">
+    <div class="col-md12">
+      <h2>SNMP host search tool</h2>
+
+
+<form method="get" action="" class="form-inline">
+  <div class="form-group">
+
+  <label>Search</label> <input class="form-control" name=search id=search value="G Managed Switch">
+  <input class="form-control" type="radio" name="type" value="os"  > OS
+  <input class="form-control" type="radio" name="type" value="ip"  > IP
+  <input class="form-control" type="radio" name="type" value="sysDescr" checked > sysDescr 
+  <input class="form-control" type="radio" name="type" value="sysObjectID"  > sysObjectId
+  <br />
+
+  Sort :
+  <input class="form-control" type="radio" name="sort" value="os"  > OS
+  <input class="form-control" type="radio" name="sort" value="sysDescr"  > sysDescr
+  <input class="form-control" type="radio" name="sort" value="sysObjectID" checked > sysObjectId
+  <input class="form-control" type="radio" name="sort" value="ip"  > IP
+  <br />
+  <input class="btn btn-control" type="submit" value="Go" />
+  </div>
+</form>
+
+
+
+<table class="table table-striped table-bordered table-rounded table-condensed-more"<thead><tr><th>IP</th><th>sysName</th><th>OS</th><th>sysObjectID</th><th>sysDescr</th></tr></thead><tr>
+          <td>193.86.244.19</td>
+          <td>konecna1180-puda</td>
+          <td>tplink</td>
+          <td>.1.3.6.1.4.1.11863.1.1.4</td>
+          <td>16G Managed Switch
+</td></tr><tr>
+          <td>91.135.21.103</td>
+          <td>TL-SG3216</td>
+          <td>tplink</td>
+          <td>.1.3.6.1.4.1.11863.1.1.4</td>
+          <td>16G Managed Switch
+</td></tr><tr>
+          <td>93.99.117.116</td>
+          <td>TL-SG3210</td>
+          <td>tplink</td>
+          <td>.1.3.6.1.4.1.11863.1.1.5</td>
+          <td>10G Managed Switch
+</td></tr><tr>
+          <td>194.12.228.158</td>
+          <td>Maria Luiza 40</td>
+          <td>tplink</td>
+          <td>.1.3.6.1.4.1.11863.1.1.5</td>
+          <td>10G Managed Switch
+</td></tr><tr>
+          <td>85.14.50.133</td>
+          <td>Razsadnika bl.87</td>
+          <td>tplink</td>
+          <td>.1.3.6.1.4.1.11863.1.1.5</td>
+          <td>10G Managed Switch
+</td></tr></table>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
