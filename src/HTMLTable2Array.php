@@ -7,7 +7,7 @@
  * @author    Mike Stupalov <mike@stupalov.com>
  * @copyright 2018 Mike Stupalov <mike@stupalov.com>
  * @license   MIT
- * @version   0.1
+ * @version   0.3
  *
  */
 
@@ -21,6 +21,7 @@ class HTMLTable2Array {
       //'firstRowIsData' 		=> FALSE,	// Boolean indicating whether the first row contains data (not headers).
 										// Choosing TRUE treats the first row as data regardless of <th> tags. DO NOT choose this if there are headers in the first row that you want to override.
       'tableID' 			=> '',		// String to contain the ID of the table. Allows user to specify a particular table. Default behavior simply grabs the first table encountered on the page.
+      'tableAll' 			=> FALSE,	// Collect all tables from page. If FALSE follect only first table or by tableID
       'headers' 			=> NULL,	// Array of header names.
 										// Format: array(colNum1 => header1, colNum2 => header2).
       'ignoreHidden' 		=> FALSE,	// Boolean indicating whether rows tagged with style="display: none;" should appear in output.
@@ -50,6 +51,10 @@ class HTMLTable2Array {
 		if ($this->printJSON) {
 			$this->silent = TRUE;
 		}
+        // Reset tableID for tableAll
+        if ($this->tableAll) {
+            $this->tableID = '';
+        }
 		$this->method = strtolower($this->method);
 		//var_dump($args);
 		//var_dump($this->config);
@@ -187,7 +192,7 @@ EOD;
 		}
 
         // Init vars
-        $table_array = [];
+        $all_tables = [];
 
         // Load HTML as DOM
         if (function_exists('mb_convert_encoding')) {
@@ -199,107 +204,115 @@ EOD;
         //var_dump($DOM);
         // Get all tables from HTML
         $tables = $DOM->getElementsByTagName('table');
-        $table = FALSE;
-        foreach ($tables as $node) {
+
+        foreach ($tables as $table) {
+
+            // Process tables
             if (strlen($this->tableID))
             {
                 // Find table with specified ID
-                if ($node->attributes->getNamedItem('id')->nodeValue == $this->tableID)
+                if ($table->attributes->getNamedItem('id')->nodeValue != $this->tableID)
                 {
-                    $table = $node;
-                    break;
+                    continue;
                 }
+            }
+
+            if (!is_object($table)) {
+                die("ERROR: Table not founded.");
+            }
+            //print_r($table);
+            //print_r($table->attributes->getNamedItem('id')->nodeValue);
+            //print_r($table->childNodes);
+
+            // Init vars
+            $table_array = [];
+
+            $header = $table->getElementsByTagName('th');
+            //print_r($header);
+            // Get header name of the table
+            foreach($header as $node_header) {
+                $table_header[] = trim($node_header->textContent);
+            }
+            //print_r($table_header);
+            $detail = $table->getElementsByTagName('tr');
+            //print_r($detail);
+            foreach($detail as $node_tr) {
+                $tds = $node_tr->getElementsByTagName('td');
+                //print_r($tds);
+                if ($tds->length == 0) {
+                    // Skip empty rows (ie header row)
+                    continue;
+                }
+                else if ($this->ignoreHidden && preg_match('/display:\ *none/i', $tds->attributes->getNamedItem('style')->nodeValue)) {
+                    // Skip hidden rows
+                    continue;
+                }
+
+                $i = 0;
+                $row = [];
+                foreach ($tds as $td) {
+                    if (isset($this->headers[$i])) {
+                        // Custom table headers
+                        $key = $this->headers[$i];
+                    } else {
+                        $key = isset($table_header[$i]) ? $table_header[$i] : $i;
+                    }
+
+                    // Ignore or Exclude columns
+                    if ($ignoring && (in_array($key, $this->ignoreColumns, TRUE) || in_array($i, $this->ignoreColumns, TRUE))) {
+                        $i++;
+                        continue;
+                    }
+                    else if ($excluding && (!in_array($key, $this->onlyColumns, TRUE) && !in_array($i, $this->onlyColumns, TRUE))) {
+                        $i++;
+                        continue;
+                    }
+
+                    $row[$key] = trim($td->textContent);
+                    $i++;
+                }
+                $table_array[] = $row;
+
+            }
+            //print_r($table_array);
+            if ($this->tableAll) {
+                $all_tables[] = $table_array;
             } else {
-                // Just use first founded table
-                $table = $node;
+                $all_tables = $table_array;
                 break;
             }
         }
-        if (!is_object($table)) {
-            die("ERROR: Table not founded.");
-        }
-        //print_r($table);
-        //print_r($table->attributes->getNamedItem('id')->nodeValue);
-        //print_r($table->childNodes);
-
-        $header = $table->getElementsByTagName('th');
-        //print_r($header);
-        // Get header name of the table
-        foreach($header as $node_header) {
-        	$table_header[] = trim($node_header->textContent);
-        }
-        //print_r($table_header);
-        $detail = $table->getElementsByTagName('tr');
-        //print_r($detail);
-        foreach($detail as $node_tr) {
-            $tds = $node_tr->getElementsByTagName('td');
-            //print_r($tds);
-            if ($tds->length == 0) {
-                // Skip empty rows (ie header row)
-                continue;
-            }
-            else if ($this->ignoreHidden && preg_match('/display:\ *none/i', $tds->attributes->getNamedItem('style')->nodeValue)) {
-                // Skip hidden rows
-                continue;
-            }
-
-            $i = 0;
-            $row = [];
-            foreach ($tds as $td) {
-                if (isset($this->headers[$i])) {
-                    // Custom table headers
-                    $key = $this->headers[$i];
-                } else {
-                    $key = isset($table_header[$i]) ? $table_header[$i] : $i;
-                }
-
-                // Ignore or Exclude columns
-                if ($ignoring && (in_array($key, $this->ignoreColumns, TRUE) || in_array($i, $this->ignoreColumns, TRUE))) {
-                    $i++;
-                    continue;
-                }
-                else if ($excluding && (!in_array($key, $this->onlyColumns, TRUE) && !in_array($i, $this->onlyColumns, TRUE))) {
-                    $i++;
-                    continue;
-                }
-
-                $row[$key] = trim($td->textContent);
-                $i++;
-            }
-            $table_array[] = $row;
-
-        }
-        //print_r($table_array);
+        unset($table_array); // Clean
 
 		if ($this->print) {
             switch (strtolower($this->format)) {
                 case 'json':
-                    echo(json_encode($table_array));
+                    echo(json_encode($all_tables));
                     break;
                 case 'serialize':
-                    echo(serialize($table_array));
+                    echo(serialize($all_tables));
                     break;
                 case 'yaml':
-                    echo(yaml_emit($table_array));
+                    echo(yaml_emit($all_tables));
                     break;
                 default:
                     // For array use well formatted print
-                    print_r($table_array);
+                    print_r($all_tables);
             }
 		} else {
             switch (strtolower($this->format)) {
                 case 'json':
-                    $output = json_encode($table_array);
+                    $output = json_encode($all_tables);
                     break;
                 case 'serialize':
-                    $output = serialize($table_array);
+                    $output = serialize($all_tables);
                     break;
                 case 'yaml':
-                    $output = yaml_emit($table_array);
+                    $output = yaml_emit($all_tables);
                     break;
                 default:
                     // For array use well formatted print
-                    $output = $table_array;
+                    $output = $all_tables;
             }
 			return $output;
 		}
