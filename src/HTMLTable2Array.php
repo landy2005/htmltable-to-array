@@ -107,14 +107,10 @@ class HTMLTable2Array {
         // Init vars
         $all_tables = [];
 
-        // Load HTML as DOM
-        if (function_exists('mb_convert_encoding')) {
-            $html = mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'); // Fix UTF-8 strings
-        }
-
         // Initialise DOM and XPath
         $dom = new DOMDocument();
         libxml_use_internal_errors(TRUE); // Disable XML warnings
+        // Load HTML as DOM
         $dom->loadHTML($html);
         //var_dump($dom);
         $xpath = new DOMXpath($dom);
@@ -348,9 +344,9 @@ EOD;
 
     private function getElementKey(DOMElement $node) {
         if ($this->headerIDs && $node->hasAttribute('id')) {
-            $key = $node->attributes->getNamedItem('id')->nodeValue;
+            $key = $this->cleanString($node->attributes->getNamedItem('id')->nodeValue);
         } else {
-            $key = $node->textContent;
+            $key = $this->cleanString($node->textContent);
         }
         return trim($key);
     }
@@ -392,7 +388,7 @@ EOD;
             $arr = [];
             foreach ($tr->childNodes as $node) {
                 if ($node->tagName == 'th') {
-                    $row = trim($node->textContent); // Use row header as Key
+                    $row = $this->cleanString($node->textContent); // Use row header as Key
                     $i++;
                 }
                 else if ($node->tagName == 'td') {
@@ -414,7 +410,7 @@ EOD;
                         continue;
                     }
 
-                    $arr[$key] = trim($node->textContent);
+                    $arr[$key] = $this->cleanString($node->textContent);
                     $i++;
                 }
             }
@@ -424,6 +420,17 @@ EOD;
         }
 
         return $table_array;
+    }
+
+    protected function cleanString(string $string) {
+        $string = strip_tags($string); // Clean HTML tags
+        $string = html_entity_decode($string, ENT_COMPAT, "utf-8");
+        // Fixtures
+        $string = preg_replace('/\xA0/u', ' ', $string); // &nbsp;
+        //if (function_exists('mb_convert_encoding')) {
+        //    $string = mb_convert_encoding($string, 'HTML-ENTITIES', 'UTF-8'); // Fix UTF-8 strings
+        //}
+        return trim($string);
     }
 
 	private function echo_t($text)
