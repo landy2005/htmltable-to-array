@@ -42,8 +42,6 @@ class HTMLTable2Array {
         'verbose' 			=> FALSE,	// Verbose CURL output
     ];
 
-    private $table_header;
-
     function __construct($args = []) {
         //$this->config = array_merge($this->config, $args);
 		foreach ($this->config as $arg => $value)
@@ -126,7 +124,7 @@ class HTMLTable2Array {
 
         foreach ($tables as $table) {
 
-            $this->table_header = [];
+            $table_header = [];
 
             // Process tables
             if (strlen($this->tableID))
@@ -164,7 +162,7 @@ class HTMLTable2Array {
                             continue;
                         }
                         elseif ($node->tagName == 'th') {
-                            $this->table_header[$row][$key] = $this->getElementKey($node);
+                            $table_header[$row][$key] = $this->getElementKey($node);
                             $key++;
                         }
                     }
@@ -189,28 +187,28 @@ class HTMLTable2Array {
                             continue;
                         }
                         elseif ($node->tagName == 'th') {
-                            $this->table_header[$row][$key] = $this->getElementKey($node);
+                            $table_header[$row][$key] = $this->getElementKey($node);
                             $key++;
                         }
                     }
-                    if (count($this->table_header)) {
+                    if (count($table_header)) {
                         // Remove first row
                         $this->removeNodes($rows, 0); // Remove tfoot for correctly set elements
                     }
                     break; // Stop on first row
                 }
             }
-            //print_r($this->table_header);
-            //print_r(count($this->table_header));
+            //print_r($table_header);
+            //print_r(count($table_header));
             /* End table header parse */
 
             /* Begin table body parse */
             //print_r($rows);
 
             if ($this->tableAll) {
-                $all_tables[] = $this->getRowsArray($rows);
+                $all_tables[] = $this->getRowsArray($rows, $table_header);
             } else {
-                $all_tables = $this->getRowsArray($rows);
+                $all_tables = $this->getRowsArray($rows, $table_header);
                 break;
             }
             /* End table body parse */
@@ -379,7 +377,7 @@ EOD;
         }
     }
 
-    private function getRowsArray(DOMNodeList $rows) {
+    private function getRowsArray(DOMNodeList $rows, $table_header = []) {
 
         // Init vars
         $table_array = [];
@@ -403,7 +401,7 @@ EOD;
                     if (isset($this->headers[$i])) {
                         $key = $this->headers[$i];
                     } else {
-                        $key = isset($this->table_header[0][$i]) ? $this->table_header[0][$i] : $i;
+                        $key = isset($table_header[0][$i]) ? $table_header[0][$i] : $i;
                     }
 
                     // Ignore or Exclude columns
