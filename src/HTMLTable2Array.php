@@ -144,6 +144,11 @@ class HTMLTable2Array {
             // Init vars
             $table_array = [];
 
+            /* Begin table footer parse */
+            $tfoots = $table->getElementsByTagName('tfoot');
+            $this->removeNodes($tfoots); // Remove tfoot for correctly set elements
+            /* End table footer parse */
+
             /* Begin table header parse */
             $theads = $table->getElementsByTagName('thead');
             if ($theads->length > 0) {
@@ -167,66 +172,76 @@ class HTMLTable2Array {
                 $this->removeNodes($theads); // Remove tfoot for correctly set elements
 
                 //echo $dom->saveHTML();
-            } else {
-                try {
-                    $header = $table->getElementsByTagName('th');
-                } catch (Exception $e) {
-                    $header = [];
-                }
+                // Fetch rows (after remove tfoot and thead)
+                $rows = $table->getElementsByTagName('tr');
 
-                //print_r($header);
-                // Get header name of the table
-                foreach ($header as $node_header) {
-                    $table_header[0][] = $this->getElementKey($node_header);
+            } else {
+                // Fetch rows
+                $rows = $table->getElementsByTagName('tr');
+                foreach ($rows as $row => $tr) {
+                    //var_dump($row); var_dump($tr);
+                    $key = 0;
+                    foreach ($tr->childNodes as $node) {
+                        if ($node->tagName == 'td') {
+                            // Iterate key and continue
+                            $key++;
+                            continue;
+                        }
+                        elseif ($node->tagName == 'th') {
+                            $table_header[$row][$key] = $this->getElementKey($node);
+                            $key++;
+                        }
+                    }
+                    if (count($table_header)) {
+                        // Remove first row
+                        $this->removeNodes($rows, 0); // Remove tfoot for correctly set elements
+                    }
+                    break; // Stop on first row
                 }
             }
             //print_r($table_header);
             //print_r(count($table_header));
             /* End table header parse */
 
-            /* Begin table footer parse */
-            $tfoots = $table->getElementsByTagName('tfoot');
-            $this->removeNodes($tfoots); // Remove tfoot for correctly set elements
-            /* End table footer parse */
-
             /* Begin table body parse */
-            $detail = $table->getElementsByTagName('tr');
-            //print_r($detail);
-            foreach($detail as $node_tr) {
-                $tds = $node_tr->getElementsByTagName('td');
-                //print_r($tds);
-                if ($tds->length == 0) {
-                    // Skip empty rows (ie header row)
-                    continue;
-                }
-                else if ($this->ignoreHidden && preg_match('/display:\ *none/i', $tds->attributes->getNamedItem('style')->nodeValue)) {
+            //print_r($rows);
+            foreach($rows as $row => $tr) {
+                if ($this->ignoreHidden && preg_match('/display:\ *none/i', $tr->attributes->getNamedItem('style')->nodeValue)) {
                     // Skip hidden rows
                     continue;
                 }
 
                 $i = 0;
                 $arr = [];
-                foreach ($tds as $td) {
-                    if (isset($this->headers[$i])) {
-                        // Custom table headers
-                        $key = $this->headers[$i];
-                    } else {
-                        $key = isset($table_header[0][$i]) ? $table_header[0][$i] : $i;
+                foreach ($tr->childNodes as $node) {
+                    if ($node->tagName == 'th') {
+                        $table_header[$row][$i] = $this->getElementKey($node);
+                        $key++;
                     }
+                    else if ($node->tagName == 'td') {
 
-                    // Ignore or Exclude columns
-                    if ($ignoring && (in_array($key, $this->ignoreColumns, TRUE) || in_array($i, $this->ignoreColumns, TRUE))) {
-                        $i++;
-                        continue;
-                    }
-                    else if ($excluding && (!in_array($key, $this->onlyColumns, TRUE) && !in_array($i, $this->onlyColumns, TRUE))) {
-                        $i++;
-                        continue;
-                    }
+                        // Set custom headers
+                        if (isset($this->headers[$i])) {
+                            $key = $this->headers[$i];
+                        } else {
+                            $key = isset($table_header[0][$i]) ? $table_header[0][$i] : $i;
+                        }
 
-                    $arr[$key] = trim($td->textContent);
-                    $i++;
+                        // Ignore or Exclude columns
+                        if ($ignoring && (in_array($key, $this->ignoreColumns, TRUE) || in_array($i, $this->ignoreColumns, TRUE))) {
+                            $i++;
+                            continue;
+                        }
+                        else if ($excluding && (!in_array($key, $this->onlyColumns, TRUE) && !in_array($i, $this->onlyColumns, TRUE))) {
+                            $i++;
+                            continue;
+                        }
+
+                        $arr[$key] = trim($node->textContent);
+                        $i++;
+                    }
                 }
+
                 $table_array[] = $arr;
 
             }
@@ -382,13 +397,24 @@ EOD;
         return trim($key);
     }
 
-    private function removeNodes(DOMNodeList $nodes) {
+    /**
+     * Remove node elements
+     * 
+     */
+    private function removeNodes(DOMNodeList $nodes, $key = FALSE) {
         // https://stackoverflow.com/a/34037291/9506633
         if ($nodes->length > 0) {
             // tfoot exist, remove it!
-            for ($i = $nodes->length; --$i >= 0; ) {
-                $node = $nodes->item($i);
+            if (is_numeric($key)) {
+                // Remove specific node
+                $node = $nodes->item($key);
                 $node->parentNode->removeChild($node);
+            } else {
+                // Remove all nodes
+                for ($i = $nodes->length; --$i >= 0; ) {
+                    $node = $nodes->item($i);
+                    $node->parentNode->removeChild($node);
+                }
             }
         }
     }
