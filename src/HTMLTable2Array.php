@@ -100,96 +100,8 @@ class HTMLTable2Array {
 			}
 		}
 
-		if (NULL == $testingTable) {
-
-			// URL GET request params
-			if (count($params))
-			{
-				$query = http_build_query($params);
-				switch ($this->method)
-				{
-					case 'post':
-						break;
-					default:
-						$url .= '?' . $query;
-				}
-			} else {
-				$query = '';
-			}
-
-			// Get html using curl
-			$c = curl_init($url);
-			curl_setopt($c, CURLOPT_TIMEOUT, 60);
-			curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-			// Set HTTP auth
-			if ($this->auth)
-			{
-				curl_setopt($c, CURLOPT_USERPWD, $this->username . ':' . $this->password);
-			}
-			// Useragent
-			if (strlen($this->useragent)) {
-				curl_setopt($c, CURLOPT_USERAGENT, $this->useragent);
-			}
-			// Set POST params if exist
-			if ($this->method == 'post' && $query)
-			{
-				curl_setopt($c, CURLOPT_POST, 1);
-				curl_setopt($c, CURLOPT_POSTFIELDS, $query);
-			}
-			// Verbose output
-			if ($this->verbose) {
-				curl_setopt($c, CURLOPT_VERBOSE, $this->verbose);
-				$verbose = fopen('php://temp', 'w+');
-				curl_setopt($c, CURLOPT_STDERR, $verbose);
-			}
-
-			$html = curl_exec($c);
-			if (curl_error($c))
-			{
-				die(curl_error($c));
-			}
-
-			// Check return status
-			$status = curl_getinfo($c, CURLINFO_HTTP_CODE);
-			if (200 <= $status && 300 > $status) {
-				$this->echo_t('Got the html from '.$url);
-			} else {
-				die('Failed to get html from '.$url);
-			}
-			// Verbose output
-			if ($this->verbose) {
-				$version = curl_version();
-				$get_info = curl_getinfo($c);
-				$get_info['version'] = $version['version'];
-
-				rewind($verbose);
-				foreach (explode("\n", str_replace("\r", '', stream_get_contents($verbose))) as $line) {
-					list($key, $value) = explode(': ', $line);
-					if (strlen($value)) {
-						$key = strtolower(trim($key, "< "));
-						$get_info[$key] = $value;
-					}
-				}
-				fclose($verbose);
-				//var_dump($get_info);
-
-				$metrics = <<<EOD
-URL.......: {$get_info['url']}
-Code......: {$get_info['http_code']} ({$get_info['redirect_count']} redirect(s) in {$get_info['redirect_time']} secs)
-Content...: {$get_info['content_type']} Size: {$get_info['download_content_length']} (Own: {$get_info['size_download']}) Filetime: {$get_info['filetime']}
-Time......: {$get_info['total_time']} Start @ {$get_info['starttransfer_time']} (DNS: {$get_info['namelookup_time']} Connect: {$get_info['connect_time']} Request: {$get_info['pretransfer_time']})
-Speed.....: Down: {$get_info['speed_download']} (avg.) Up: {$get_info['speed_upload']} (avg.)
-User-Agent: {$get_info['user-agent']}
-Server....: {$get_info['server']}
-Curl......: v{$get_info['version']}
-EOD;
-				echo($metrics);
-
-			}
-			curl_close($c);
-		} else {
-			$html = $testingTable;
-		}
+        // Fetch HTML Content
+        $html = $this->fetchContent($url, $params, $testingTable);
 
         // Init vars
         $all_tables = [];
@@ -318,6 +230,102 @@ EOD;
 		}
 
 	}
+
+    private function fetchContent($url, $params = [], $testingTable = NULL) {
+
+		if (NULL == $testingTable) {
+
+			// URL GET request params
+			if (count($params))
+			{
+				$query = http_build_query($params);
+				switch ($this->method)
+				{
+					case 'post':
+						break;
+					default:
+						$url .= '?' . $query;
+				}
+			} else {
+				$query = '';
+			}
+
+			// Get html using curl
+			$c = curl_init($url);
+			curl_setopt($c, CURLOPT_TIMEOUT, 60);
+			curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
+			// Set HTTP auth
+			if ($this->auth)
+			{
+				curl_setopt($c, CURLOPT_USERPWD, $this->username . ':' . $this->password);
+			}
+			// Useragent
+			if (strlen($this->useragent)) {
+				curl_setopt($c, CURLOPT_USERAGENT, $this->useragent);
+			}
+			// Set POST params if exist
+			if ($this->method == 'post' && $query)
+			{
+				curl_setopt($c, CURLOPT_POST, 1);
+				curl_setopt($c, CURLOPT_POSTFIELDS, $query);
+			}
+			// Verbose output
+			if ($this->verbose) {
+				curl_setopt($c, CURLOPT_VERBOSE, $this->verbose);
+				$verbose = fopen('php://temp', 'w+');
+				curl_setopt($c, CURLOPT_STDERR, $verbose);
+			}
+
+			$html = curl_exec($c);
+			if (curl_error($c))
+			{
+				die(curl_error($c));
+			}
+
+			// Check return status
+			$status = curl_getinfo($c, CURLINFO_HTTP_CODE);
+			if (200 <= $status && 300 > $status) {
+				$this->echo_t('Got the html from '.$url);
+			} else {
+				die('Failed to get html from '.$url);
+			}
+			// Verbose output
+			if ($this->verbose) {
+				$version = curl_version();
+				$get_info = curl_getinfo($c);
+				$get_info['version'] = $version['version'];
+
+				rewind($verbose);
+				foreach (explode("\n", str_replace("\r", '', stream_get_contents($verbose))) as $line) {
+					list($key, $value) = explode(': ', $line);
+					if (strlen($value)) {
+						$key = strtolower(trim($key, "< "));
+						$get_info[$key] = $value;
+					}
+				}
+				fclose($verbose);
+				//var_dump($get_info);
+
+				$metrics = <<<EOD
+URL.......: {$get_info['url']}
+Code......: {$get_info['http_code']} ({$get_info['redirect_count']} redirect(s) in {$get_info['redirect_time']} secs)
+Content...: {$get_info['content_type']} Size: {$get_info['download_content_length']} (Own: {$get_info['size_download']}) Filetime: {$get_info['filetime']}
+Time......: {$get_info['total_time']} Start @ {$get_info['starttransfer_time']} (DNS: {$get_info['namelookup_time']} Connect: {$get_info['connect_time']} Request: {$get_info['pretransfer_time']})
+Speed.....: Down: {$get_info['speed_download']} (avg.) Up: {$get_info['speed_upload']} (avg.)
+User-Agent: {$get_info['user-agent']}
+Server....: {$get_info['server']}
+Curl......: v{$get_info['version']}
+EOD;
+				echo($metrics);
+
+			}
+			curl_close($c);
+		} else {
+			$html = $testingTable;
+		}
+
+        return $html;
+    }
 
 	private function echo_t($text)
 	{
