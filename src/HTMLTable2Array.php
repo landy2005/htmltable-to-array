@@ -24,6 +24,7 @@ class HTMLTable2Array {
         'tableAll' 			=> FALSE,	// Collect all tables from page. If FALSE follect only first table or by tableID
         'headers' 			=> NULL,	// Array of header names.
 										// Format: array(colNum1 => header1, colNum2 => header2).
+        'headerIDs' 		=> TRUE,	// Use header id attribute instead element value.
         'ignoreHidden' 		=> FALSE,	// Boolean indicating whether rows tagged with style="display: none;" should appear in output.
 										// Setting TRUE will suppress hidden rows.
         'ignoreColumns' 	=> NULL,	// Array of column indexes to ignore. Named columns use caseSensitive compare!
@@ -161,7 +162,7 @@ class HTMLTable2Array {
                                 continue;
                             }
                             elseif ($node->tagName == 'th') {
-                                $table_header[$row][$key] = trim($node->textContent);
+                                $table_header[$row][$key] = $this->getElementKey($node);
                                 $key++;
                             }
                         }
@@ -181,8 +182,8 @@ class HTMLTable2Array {
 
                 //print_r($header);
                 // Get header name of the table
-                foreach($header as $node_header) {
-                    $table_header[0][] = trim($node_header->textContent);
+                foreach ($header as $node_header) {
+                    $table_header[0][] = $this->getElementKey($node_header);
                 }
             }
             //print_r($table_header);
@@ -386,6 +387,15 @@ EOD;
 		}
 
         return $html;
+    }
+
+    private function getElementKey($node) {
+        if ($this->headerIDs && $node->hasAttribute('id')) {
+            $key = $node->attributes->getNamedItem('id')->nodeValue;
+        } else {
+            $key = $node->textContent;
+        }
+        return trim($key);
     }
 
 	private function echo_t($text)

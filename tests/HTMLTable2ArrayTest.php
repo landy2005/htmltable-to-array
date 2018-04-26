@@ -54,6 +54,9 @@ final class HTMLTable2ArrayTest extends TestCase
         $array[] = ['multiple-tables',    'multiple-tables-tableAll',   ['tableAll' => TRUE]];
         $array[] = ['multiple-tables',    'multiple-tables-tableAll',   ['tableAll' => TRUE, 'format' => 'json']];
         $array[] = ['multiple-tables',    'multiple-tables-tableID',    ['tableID' => 'test1']];
+        $array[] = ['multiple-tables',    'multiple-tables-headerIDs',  ['headerIDs' => FALSE]];
+        // Advanced
+        $array[] = ['spending-record-finished', 'spending-record-finished', $params];
 
         return $array;
     }
