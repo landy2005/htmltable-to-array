@@ -17,28 +17,28 @@ class HTMLTable2Array {
      * @var config[]
      */
     protected $config = [
-      //'firstColIsRowName' 	=> TRUE, 	// Boolean indicating whether the first column in the table should be parsed as the title for all values in the row.
-      //'firstRowIsData' 		=> FALSE,	// Boolean indicating whether the first row contains data (not headers).
+        //'firstColIsRowName' 	=> TRUE, 	// Boolean indicating whether the first column in the table should be parsed as the title for all values in the row.
+        //'firstRowIsData' 		=> FALSE,	// Boolean indicating whether the first row contains data (not headers).
 										// Choosing TRUE treats the first row as data regardless of <th> tags. DO NOT choose this if there are headers in the first row that you want to override.
-      'tableID' 			=> '',		// String to contain the ID of the table. Allows user to specify a particular table. Default behavior simply grabs the first table encountered on the page.
-      'tableAll' 			=> FALSE,	// Collect all tables from page. If FALSE follect only first table or by tableID
-      'headers' 			=> NULL,	// Array of header names.
+        'tableID' 			=> '',		// String to contain the ID of the table. Allows user to specify a particular table. Default behavior simply grabs the first table encountered on the page.
+        'tableAll' 			=> FALSE,	// Collect all tables from page. If FALSE follect only first table or by tableID
+        'headers' 			=> NULL,	// Array of header names.
 										// Format: array(colNum1 => header1, colNum2 => header2).
-      'ignoreHidden' 		=> FALSE,	// Boolean indicating whether rows tagged with style="display: none;" should appear in output.
+        'ignoreHidden' 		=> FALSE,	// Boolean indicating whether rows tagged with style="display: none;" should appear in output.
 										// Setting TRUE will suppress hidden rows.
-      'ignoreColumns' 		=> NULL,	// Array of column indexes to ignore. Named columns use caseSensitive compare!
+        'ignoreColumns' 	=> NULL,	// Array of column indexes to ignore. Named columns use caseSensitive compare!
 										// Format: array(0 => firstColToIgnore, 1 => secondColToIgnore) OR array(firstIndex, secondIndex).
-      'onlyColumns' 		=> FALSE,	// Array of column indexes to include; all others are ignored. Named columns use caseSensitive compare!
+        'onlyColumns' 		=> FALSE,	// Array of column indexes to include; all others are ignored. Named columns use caseSensitive compare!
 										// Format: array(0 => firstColToInclude, 1 => secondColToInclude) OR array(firstIndex, secondIndex).
-      'format'   			=> 'array',	// Which output format to use. Possible: array, json, serialize, yaml
-      'print'   			=> FALSE,	// Boolean indicating whether the program should echo to stdout or simply return the output to the caller.
-      'auth'     			=> FALSE,	// Use http auth, TRUE will set basic http auth.
-      'username' 			=> '',		// Username for basic http auth
-      'password' 			=> '',		// Password for basic http auth
-	  'method'              => 'get',	// Method for pass params to url (get/post)
-	  'useragent'			=> '',		// Set custom useragent. If empty, used default curl user agent.
-      'silent' 				=> FALSE,	// Silent output
-	  'verbose' 			=> FALSE,	// Verbose CURL output
+        'format'   			=> 'array',	// Which output format to use. Possible: array, json, serialize, yaml
+        'print'   			=> FALSE,	// Boolean indicating whether the program should echo to stdout or simply return the output to the caller.
+        'auth'     			=> FALSE,	// Use http auth, TRUE will set basic http auth.
+        'username' 			=> '',		// Username for basic http auth
+        'password' 			=> '',		// Password for basic http auth
+        'method'            => 'get',	// Method for pass params to url (get/post)
+        'useragent'			=> '',		// Set custom useragent. If empty, used default curl user agent.
+        'silent' 			=> FALSE,	// Silent output
+        'verbose' 			=> FALSE,	// Verbose CURL output
     ];
 
     function __construct($args = []) {
@@ -110,12 +110,16 @@ class HTMLTable2Array {
         if (function_exists('mb_convert_encoding')) {
             $html = mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'); // Fix UTF-8 strings
         }
-        $DOM = new DOMDocument();
+
+        // Initialise DOM and XPath
+        $dom = new DOMDocument();
         libxml_use_internal_errors(TRUE); // Disable XML warnings
-        $DOM->loadHTML($html);
-        //var_dump($DOM);
+        $dom->loadHTML($html);
+        //var_dump($dom);
+        $xpath = new DOMXpath($dom);
+
         // Get all tables from HTML
-        $tables = $DOM->getElementsByTagName('table');
+        $tables = $dom->getElementsByTagName('table');
 
         foreach ($tables as $table) {
 
@@ -139,13 +143,68 @@ class HTMLTable2Array {
             // Init vars
             $table_array = [];
 
-            $header = $table->getElementsByTagName('th');
-            //print_r($header);
-            // Get header name of the table
-            foreach($header as $node_header) {
-                $table_header[] = trim($node_header->textContent);
+            /* Begin table header parse */
+            $theads = $table->getElementsByTagName('thead');
+            if ($theads->length > 0) {
+                // thead exist, use it!
+                for ($i = $theads->length; --$i >= 0; ) {
+                    $thead = $theads->item($i);
+                    //var_dump($thead->getElementsByTagName('tr'));
+
+                    foreach ($thead->getElementsByTagName('tr') as $row => $tr) {
+                        //var_dump($row); var_dump($tr);
+                        $key = 0;
+                        foreach ($tr->childNodes as $node) {
+                            if ($node->tagName == 'td') {
+                                // Iterate key and continue
+                                $key++;
+                                continue;
+                            }
+                            elseif ($node->tagName == 'th') {
+                                $table_header[$row][$key] = trim($node->textContent);
+                                $key++;
+                            }
+                        }
+                    }
+
+                    //https://stackoverflow.com/a/34037291/9506633
+                    $thead->parentNode->removeChild($thead); // Remove thead for correctly set table keys
+                }
+
+                //echo $dom->saveHTML();
+            } else {
+                try {
+                    $header = $table->getElementsByTagName('th');
+                } catch (Exception $e) {
+                    $header = [];
+                }
+
+                //print_r($header);
+                // Get header name of the table
+                foreach($header as $node_header) {
+                    $table_header[0][] = trim($node_header->textContent);
+                }
             }
             //print_r($table_header);
+            //print_r(count($table_header));
+            /* End table header parse */
+
+            /* Begin table footer parse */
+            $tfoots = $table->getElementsByTagName('tfoot');
+            if ($tfoots->length > 0) {
+                // tfoot exist, remove it!
+                for ($i = $tfoots->length; --$i >= 0; ) {
+                    $tfoot = $tfoots->item($i);
+
+                    //https://stackoverflow.com/a/34037291/9506633
+                    $tfoot->parentNode->removeChild($tfoot); // Remove tfoot for correctly set elements
+                }
+
+                //echo $dom->saveHTML();
+            }
+            /* End table footer parse */
+
+            /* Begin table body parse */
             $detail = $table->getElementsByTagName('tr');
             //print_r($detail);
             foreach($detail as $node_tr) {
@@ -161,13 +220,13 @@ class HTMLTable2Array {
                 }
 
                 $i = 0;
-                $row = [];
+                $arr = [];
                 foreach ($tds as $td) {
                     if (isset($this->headers[$i])) {
                         // Custom table headers
                         $key = $this->headers[$i];
                     } else {
-                        $key = isset($table_header[$i]) ? $table_header[$i] : $i;
+                        $key = isset($table_header[0][$i]) ? $table_header[0][$i] : $i;
                     }
 
                     // Ignore or Exclude columns
@@ -180,12 +239,14 @@ class HTMLTable2Array {
                         continue;
                     }
 
-                    $row[$key] = trim($td->textContent);
+                    $arr[$key] = trim($td->textContent);
                     $i++;
                 }
-                $table_array[] = $row;
+                $table_array[] = $arr;
 
             }
+            /* End table body parse */
+
             //print_r($table_array);
             if ($this->tableAll) {
                 $all_tables[] = $table_array;
