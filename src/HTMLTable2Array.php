@@ -41,6 +41,8 @@ class HTMLTable2Array {
         'silent' 			=> FALSE,	// Silent output
         'verbose' 			=> FALSE,	// Verbose CURL output
     ];
+    private $ignoring  = FALSE;
+    private $excluding = FALSE;
 
     function __construct($args = []) {
         //$this->config = array_merge($this->config, $args);
@@ -59,25 +61,14 @@ class HTMLTable2Array {
 		$this->method = strtolower($this->method);
 		//var_dump($args);
 		//var_dump($this->config);
-    }
 
-	public function tableToArray($url, $params = [], $testingTable = NULL) {
-
-		$ignoring = FALSE;
-		$excluding = FALSE;
-
+        // Fixture ignoring and excluding columns
 		if (NULL != $this->onlyColumns) {
 			if (!is_array($this->onlyColumns)) {
 				$this->echo_t('onlyColumns must be an array. Did not ignore any columns.');
 				$this->onlyColumns = NULL;
 			} else {
-				for ($i = 0; $i < count($this->onlyColumns); $i++) {
-					if (is_int($this->onlyColumns[$i])) {
-						$excluding = TRUE;
-						$this->ignoreColumns = NULL;
-						break;
-					}
-				}
+                $this->excluding = TRUE;
 			}
 		}
 		else if (NULL != $this->ignoreColumns) {
@@ -85,21 +76,20 @@ class HTMLTable2Array {
 				$this->echo_t('ignoreColumns must be an array. Did not ignore any columns.');
 				$this->ignoreColumns = NULL;
 			} else {
-				for ($i = 0; $i < count($this->ignoreColumns); $i++) {
-					if (is_int($this->ignoreColumns[$i])) {
-						$ignoring = TRUE;
-						break;
-					}
-				}
+                $this->ignoring = TRUE;
 			}
 		}
 
+        // Fixture headers
 		if (NULL != $this->headers) {
 			if (!is_array($this->headers)) {
 				$this->echo_t('headers must be an array. Will not change any headers.');
 				$this->headers = NULL;
 			}
 		}
+    }
+
+	public function tableToArray($url, $params = [], $testingTable = NULL) {
 
         // Fetch HTML Content
         $html = $this->fetchContent($url, $params, $testingTable);
@@ -414,11 +404,11 @@ EOD;
                     }
 
                     // Ignore or Exclude columns
-                    if ($ignoring && (in_array($key, $this->ignoreColumns, TRUE) || in_array($i, $this->ignoreColumns, TRUE))) {
+                    if ($this->ignoring && (in_array($key, $this->ignoreColumns, TRUE) || in_array($i, $this->ignoreColumns, TRUE))) {
                         $i++;
                         continue;
                     }
-                    else if ($excluding && (!in_array($key, $this->onlyColumns, TRUE) && !in_array($i, $this->onlyColumns, TRUE))) {
+                    else if ($this->excluding && (!in_array($key, $this->onlyColumns, TRUE) && !in_array($i, $this->onlyColumns, TRUE))) {
                         $i++;
                         continue;
                     }
