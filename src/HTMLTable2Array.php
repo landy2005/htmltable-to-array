@@ -7,7 +7,7 @@
  * @author    Mike Stupalov <mike@stupalov.com>
  * @copyright 2018 Mike Stupalov <mike@stupalov.com>
  * @license   MIT
- * @version   0.4.1
+ * @version   0.4.2
  *
  */
 
@@ -29,7 +29,7 @@ class HTMLTable2Array {
 										// Setting TRUE will suppress hidden rows.
         'ignoreColumns' 	=> NULL,	// Array of column indexes to ignore. Named columns use caseSensitive compare!
 										// Format: array(0 => firstColToIgnore, 1 => secondColToIgnore) OR array(firstIndex, secondIndex).
-        'onlyColumns' 		=> FALSE,	// Array of column indexes to include; all others are ignored. Named columns use caseSensitive compare!
+        'onlyColumns' 		=> NULL,	// Array of column indexes to include; all others are ignored. Named columns use caseSensitive compare!
 										// Format: array(0 => firstColToInclude, 1 => secondColToInclude) OR array(firstIndex, secondIndex).
         'format'   			=> 'array',	// Which output format to use. Possible: array, json, serialize, yaml
         'print'   			=> FALSE,	// Boolean indicating whether the program should echo to stdout or simply return the output to the caller.
@@ -106,6 +106,7 @@ class HTMLTable2Array {
 
         // Init vars
         $all_tables = [];
+        $table_i    = 0;
 
         // Initialise DOM and XPath
         $dom = new DOMDocument();
@@ -121,6 +122,15 @@ class HTMLTable2Array {
         foreach ($tables as $table) {
 
             $table_header = [];
+
+            // Table name
+            if (strlen($table->getElementsByTagName('caption')->item(0)->textContent)) {
+                $table_name = $table->getElementsByTagName('caption')->item(0)->textContent;
+            } elseif (strlen($table->attributes->getNamedItem('id')->nodeValue)) {
+                $table_name = $table->attributes->getNamedItem('id')->nodeValue;
+            } else {
+                $table_name = '';
+            }
 
             // Process tables
             if (strlen($this->tableID))
@@ -202,12 +212,15 @@ class HTMLTable2Array {
             //print_r($rows);
 
             if ($this->tableAll) {
-                $all_tables[] = $this->getRowsArray($rows, $table_header);
+                $table_name = strlen($table_name) ? $table_name : $table_i;
+                $all_tables[$table_name] = $this->getRowsArray($rows, $table_header);
             } else {
                 $all_tables = $this->getRowsArray($rows, $table_header);
                 break;
             }
             /* End table body parse */
+
+            $table_i++; // Iterate table counter
         }
         unset($table_array); // Clean
 
