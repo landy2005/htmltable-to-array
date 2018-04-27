@@ -58,13 +58,14 @@ final class HTMLTable2ArrayTest extends TestCase
 
         // Advanced
         $array[] = ['spending-record-finished', 'spending-record-finished',     $params];
+        $array[] = ['timetable-caption',        'timetable-caption',            $params];
         $array[] = ['hidden-rows',              'hidden-rows',                  $params];
         $array[] = ['hidden-rows',              'hidden-rows-ignoreHidden',     ['ignoreHidden' => TRUE]];
-        $array[] = ['timetable-caption',        'timetable-caption',            $params];
         $array[] = ['simple-table-error',       'simple-table-ignoreColumns1',  ['ignoreColumns' => ['IP', 'OS']]];
         $array[] = ['simple-table-error',       'simple-table-ignoreColumns2',  ['ignoreColumns' => [3, 1]]];
         $array[] = ['simple-table-error',       'simple-table-onlyColumns1',    ['onlyColumns' => ['IP', 'OS']]];
         $array[] = ['simple-table-error',       'simple-table-onlyColumns2',    ['onlyColumns' => [3, 1]]];
+        $array[] = ['simple-table-error',       'simple-table-headers',         ['headers' => [1 => 'header1', 3 => 'header3']]];
 
         return $array;
     }
