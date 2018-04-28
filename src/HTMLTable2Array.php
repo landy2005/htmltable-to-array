@@ -114,8 +114,9 @@ class HTMLTable2Array {
             $table_header = [];
 
             // Table name
-            if (strlen($table->getElementsByTagName('caption')->item(0)->textContent)) {
-                $table_name = $table->getElementsByTagName('caption')->item(0)->textContent;
+            $caption = $table->getElementsByTagName('caption');
+            if ($caption->length > 0) {
+                $table_name = $caption->item(0)->textContent;
             } elseif (strlen($table->attributes->getNamedItem('id')->nodeValue)) {
                 $table_name = $table->attributes->getNamedItem('id')->nodeValue;
             } else {
