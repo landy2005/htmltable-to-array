@@ -7,7 +7,7 @@
  * @author    Mike Stupalov <mike@stupalov.com>
  * @copyright 2018 Mike Stupalov <mike@stupalov.com>
  * @license   MIT
- * @version   0.4.3
+ * @version   0.4.4
  *
  */
 
@@ -391,7 +391,8 @@ EOD;
         $table_array = [];
 
         foreach ($rows as $row => $tr) {
-            if ($this->ignoreHidden && preg_match('/display:\ *none/i', $tr->attributes->getNamedItem('style')->nodeValue)) {
+            if ($this->ignoreHidden && $tr->hasAttribute('style') &&
+                preg_match('/display:\ *none/i', $tr->attributes->getNamedItem('style')->nodeValue)) {
                 // Skip hidden rows
                 continue;
             }

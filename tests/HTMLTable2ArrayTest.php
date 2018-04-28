@@ -30,6 +30,9 @@ final class HTMLTable2ArrayTest extends TestCase
         }
         $test_content = file_get_contents($file_json);
 
+        if (!isset($params['format'])) {
+            $params['format'] = 'array';
+        }
         switch ($params['format']) {
             case 'json':
                 $test = $test_content;
