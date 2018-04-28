@@ -153,6 +153,10 @@ class HTMLTable2Array {
                     //var_dump($row); var_dump($tr);
                     $key = 0;
                     foreach ($tr->childNodes as $node) {
+                        if (!property_exists($node, 'tagName'))
+                        {
+                            continue;
+                        }
                         if ($node->tagName == 'td') {
                             // Iterate key and continue
                             $key++;
@@ -178,6 +182,10 @@ class HTMLTable2Array {
                     //var_dump($row); var_dump($tr);
                     $key = 0;
                     foreach ($tr->childNodes as $node) {
+                        if (!property_exists($node, 'tagName'))
+                        {
+                            continue;
+                        }
                         if ($node->tagName == 'td') {
                             // Iterate key and continue
                             $key++;
@@ -391,6 +399,10 @@ EOD;
             $i = 0;
             $arr = [];
             foreach ($tr->childNodes as $node) {
+                if (!property_exists($node, 'tagName'))
+                {
+                    continue;
+                }
                 if ($node->tagName == 'th') {
                     $row = $this->cleanString($node->textContent); // Use row header as Key
                     $i++;
