@@ -7,7 +7,7 @@
  * @author    Mike Stupalov <mike@stupalov.com>
  * @copyright 2018 Mike Stupalov <mike@stupalov.com>
  * @license   MIT
- * @version   0.4.2
+ * @version   0.4.3
  *
  */
 
@@ -50,8 +50,8 @@ class HTMLTable2Array {
 		{
 			$this->{$arg} = isset($args[$arg]) ? $args[$arg] : $value;
 		}
-		// Make json output to clean
-		if ($this->printJSON) {
+		// Make printable output to be clean
+		if ($this->print) {
 			$this->silent = TRUE;
 		}
         // Reset tableID for tableAll
