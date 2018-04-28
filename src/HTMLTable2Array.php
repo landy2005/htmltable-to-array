@@ -426,8 +426,9 @@ EOD;
         return $table_array;
     }
 
-    protected function cleanString(string $string) {
-        $string = strip_tags($string); // Clean HTML tags
+    protected function cleanString($string) {
+
+        $string = strip_tags((string)$string); // Clean HTML tags
         $string = html_entity_decode($string, ENT_COMPAT, "utf-8");
         // Fixtures
         $string = preg_replace('/\xA0/u', ' ', $string); // &nbsp;
