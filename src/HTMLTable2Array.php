@@ -32,7 +32,7 @@ class HTMLTable2Array {
         'onlyColumns' 		=> NULL,	// Array of column indexes to include; all others are ignored. Named columns use caseSensitive compare!
 										// Format: array(0 => firstColToInclude, 1 => secondColToInclude) OR array(firstIndex, secondIndex).
         'format'   			=> 'array',	// Which output format to use. Possible: array, json, serialize, yaml
-        'print'   			=> FALSE,	// Boolean indicating whether the program should echo to stdout or simply return the output to the caller.
+        'printString'   	=> FALSE,	// Boolean indicating whether the program should echo to stdout or simply return the output to the caller.
         'auth'     			=> FALSE,	// Use http auth, TRUE will set basic http auth.
         'username' 			=> '',		// Username for basic http auth
         'password' 			=> '',		// Password for basic http auth
@@ -51,7 +51,7 @@ class HTMLTable2Array {
 			$this->{$arg} = isset($args[$arg]) ? $args[$arg] : $value;
 		}
 		// Make printable output to be clean
-		if ($this->print) {
+		if ($this->printString) {
 			$this->silent = TRUE;
 		}
         // Reset tableID for tableAll
@@ -214,7 +214,7 @@ class HTMLTable2Array {
         }
         unset($table_array); // Clean
 
-		if ($this->print) {
+		if ($this->printString) {
             switch (strtolower($this->format)) {
                 case 'json':
                     echo(json_encode($all_tables));
