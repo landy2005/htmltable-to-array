@@ -117,7 +117,7 @@ class HTMLTable2Array {
             $caption = $table->getElementsByTagName('caption');
             if ($caption->length > 0) {
                 $table_name = $caption->item(0)->textContent;
-            } elseif (strlen($table->attributes->getNamedItem('id')->nodeValue)) {
+            } elseif ($table->hasAttribute('id') && strlen($table->attributes->getNamedItem('id')->nodeValue)) {
                 $table_name = $table->attributes->getNamedItem('id')->nodeValue;
             } else {
                 $table_name = '';
@@ -127,7 +127,7 @@ class HTMLTable2Array {
             if (strlen($this->tableID))
             {
                 // Find table with specified ID
-                if ($table->attributes->getNamedItem('id')->nodeValue != $this->tableID)
+                if ($table->hasAttribute('id') && $table->attributes->getNamedItem('id')->nodeValue != $this->tableID)
                 {
                     continue;
                 }
