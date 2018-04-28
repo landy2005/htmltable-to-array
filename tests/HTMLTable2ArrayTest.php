@@ -2,6 +2,10 @@
 
 use PHPUnit\Framework\TestCase;
 
+if (defined('HHVM_VERSION')) {
+    @ini_set('hhvm.libxml.ext_entity_whitelist', 'file,http,https');
+}
+
 final class HTMLTable2ArrayTest extends TestCase
 {
     private $DataDir = __DIR__ . '/Data/';

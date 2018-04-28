@@ -4,12 +4,11 @@ php:
   - '7.0'
   - '7.1'
   - '7.2'
-  - hhvm # on Trusty only
+  - hhvm
   - nightly
-before_install:
-  - echo 'hhvm.libxml.ext_entity_whitelist = file,http,https' > travis.hhvm.ini
+matrix:
+  allow_failures:
+    - php: hhvm
 before_script:
   - composer self-update
   - composer install --prefer-source --no-interaction
-script:
-  - sh -c 'if [ "$TRAVIS_PHP_VERSION" == "hhvm" ]; then hhvm -c travis.hhvm.ini $HOME/.phpenv/versions/hhv/bin/phpunit; fi;'
